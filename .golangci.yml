@@ -15,7 +15,6 @@ output:
 linters:
   disable-all: true
   enable:
-    - goconst
     - goimports
     - gosimple
     - govet
@@ -42,16 +41,10 @@ linters:
 linters-settings:
   gofmt:
     simplify: true
-  goconst:
-    min-len: 3 # minimum length of string constant
-    min-occurrences: 6 # minimum number of occurrences
 
 issues:
   exclude-rules:
     - path: core/state/metrics.go
-      linters:
-        - unused
-    - path: core/state/statedb_fuzz_test.go
       linters:
         - unused
     - path: core/txpool/legacypool/list.go

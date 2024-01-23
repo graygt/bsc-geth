@@ -1,4 +1,121 @@
 # Changelog
+## v1.3.8
+FEATURE
+* [\#2074](https://github.com/bnb-chain/bsc/pull/2074) faucet: new faucet client
+* [\#2082](https://github.com/bnb-chain/bsc/pull/2082) cmd/dbcmd: add inspect trie tool
+* [\#2140](https://github.com/bnb-chain/bsc/pull/2140) eth/fetcher: allow underpriced transactions in after timeout
+* [\#2115](https://github.com/bnb-chain/bsc/pull/2115) p2p: no peer reconnect if explicitly disconnected
+* [\#2128](https://github.com/bnb-chain/bsc/pull/2128) go.mod: upgrade prysm to support built with go@v1.21
+* [\#2151](https://github.com/bnb-chain/bsc/pull/2151) feat: enable NoDial should still dial static nodes
+* [\#2144](https://github.com/bnb-chain/bsc/pull/2144) p2p: reset disconnect set with magic enode ID
+
+BUGFIX
+* [\#2095](https://github.com/bnb-chain/bsc/pull/2095) rpc: fix ns/µs mismatch in metrics
+* [\#2083](https://github.com/bnb-chain/bsc/pull/2083) triedb/pathdb: fix async node buffer diskroot mismatches when journaling
+* [\#2120](https://github.com/bnb-chain/bsc/pull/2120) ethdb/pebble: cap memory table size as maxMemTableSize-1
+* [\#2107](https://github.com/bnb-chain/bsc/pull/2107) cmd/geth: fix parse state scheme
+* [\#2121](https://github.com/bnb-chain/bsc/pull/2121) parlia: fix verifyVoteAttestation when verify a batch of headers
+* [\#2132](https://github.com/bnb-chain/bsc/pull/2132) core: fix systemcontracts.GenesisHash when run bsc firstly without init
+* [\#2155](https://github.com/bnb-chain/bsc/pull/2155) cmd, core: resolve scheme from a read-write database and refactor resolveChainFreezerDir func
+
+IMPROVEMENT
+* [\#2099](https://github.com/bnb-chain/bsc/pull/2099) params/config: remove useless toml tag for hardforks
+* [\#2100](https://github.com/bnb-chain/bsc/pull/2100) core/genesis: support chapel to run without geth init
+* [\#2101](https://github.com/bnb-chain/bsc/pull/2101) core: add metrics for bad block
+* [\#2109](https://github.com/bnb-chain/bsc/pull/2109) cmd/geth: tidy flags for geth command
+* [\#1953](https://github.com/bnb-chain/bsc/pull/1953) build(deps): bump github.com/docker/docker
+* [\#2086](https://github.com/bnb-chain/bsc/pull/2086) build(deps): bump golang.org/x/crypto from 0.12.0 to 0.17.0
+* [\#2106](https://github.com/bnb-chain/bsc/pull/2106) params: use rialto to test builtin network logic
+* [\#2098](https://github.com/bnb-chain/bsc/pull/2098) cmd, les, tests: remove light client code
+* [\#2114](https://github.com/bnb-chain/bsc/pull/2114) p2p: add serve metrics
+* [\#2123](https://github.com/bnb-chain/bsc/pull/2123) p2p, eth: improve logs
+* [\#2116](https://github.com/bnb-chain/bsc/pull/2116) tests: revive evm test cases
+* [\#2161](https://github.com/bnb-chain/bsc/pull/2161) code: remove IsEuler check from worker.go
+* [\#2167](https://github.com/bnb-chain/bsc/pull/2167) improve: increase SystemTxsGas from 1,500,000 to 5,000,000
+* [\#2172](https://github.com/bnb-chain/bsc/pull/2172) improve: remove sharedpool from miner
+* [\#1332](https://github.com/bnb-chain/bsc/pull/1332) core/state: no need to prune block if the same
+
+## v1.3.7
+FEATURE
+* [\#2067](https://github.com/bnb-chain/bsc/pull/2067) cmd/geth: add check func to validate state scheme
+* [\#2068](https://github.com/bnb-chain/bsc/pull/2068) internal/ethapi: implement eth_getBlockReceipts
+
+BUGFIX
+* [\#2035](https://github.com/bnb-chain/bsc/pull/2035) all: pull snap sync PRs from upstream v1.13.5
+* [\#2072](https://github.com/bnb-chain/bsc/pull/2072) fix: fix the pebble config of level option
+* [\#2078](https://github.com/bnb-chain/bsc/pull/2078) core: LoadChainConfig return the predefined config for built-in networks firstly
+
+## v1.3.6
+FEATURE
+* [\#2012](https://github.com/bnb-chain/bsc/pull/2012) cmd, core, ethdb: enable Pebble on 32 bits and OpenBSD
+* [\#2063](https://github.com/bnb-chain/bsc/pull/2063) log: support to disable log rotate by hours
+* [\#2064](https://github.com/bnb-chain/bsc/pull/2064) log: limit rotateHours in range [0,23]
+
+BUGFIX
+* [\#2058](https://github.com/bnb-chain/bsc/pull/2058) params: set default hardfork times
+
+IMPROVEMENT
+* [\#2015](https://github.com/bnb-chain/bsc/pull/2015) cmd, core, eth: change default network from ETH to BSC
+* [\#2036](https://github.com/bnb-chain/bsc/pull/2036) cmd/jsutils: add 2 tools get validator version and block txs number
+* [\#2037](https://github.com/bnb-chain/bsc/pull/2037) core/txpool/legacypool: respect nolocals-setting
+* [\#2042](https://github.com/bnb-chain/bsc/pull/2042) core/systemcontracts: update CommitUrl for keplerUpgrade
+* [\#2043](https://github.com/bnb-chain/bsc/pull/2043) tests/truffle: adapt changes in bsc-genesis-contracts
+* [\#2051](https://github.com/bnb-chain/bsc/pull/2051) core/vote: wait some blocks before voting since mining begin
+* [\#2060](https://github.com/bnb-chain/bsc/pull/2060) cmd/utils: allow HTTPHost and WSHost flags precede
+
+## v1.3.5
+FEATURE
+* [\#1970](https://github.com/bnb-chain/bsc/pull/1970) core: enable Shanghai EIPs
+* [\#1973](https://github.com/bnb-chain/bsc/pull/1973) core/systemcontracts: include BEP-319 on kepler hardfork
+
+BUGFIX
+* [\#1964](https://github.com/bnb-chain/bsc/pull/1964) consensus/parlia: hardfork block can be epoch block
+* [\#1979](https://github.com/bnb-chain/bsc/pull/1979) fix: upgrade pebble and improve config
+* [\#1980](https://github.com/bnb-chain/bsc/pull/1980) internal/ethapi: fix null effectiveGasPrice in GetTransactionReceipt
+
+IMPROVEMENT
+* [\#1977](https://github.com/bnb-chain/bsc/pull/1977) doc: add instructions for starting fullnode with pbss
+
+## v1.3.4
+BUGFIX
+* fix: remove pipecommit in miner
+* add a hard fork: Hertzfix
+
+## v1.3.3
+BUGFIX
+* [\#1986](https://github.com/bnb-chain/bsc/pull/1986) fix(cmd): check pruneancient when creating db
+
+IMPROVEMENT
+* [\#2000](https://github.com/bnb-chain/bsc/pull/2000) cmd/utils: exit process if txlookuplimit flag is set
+
+## v1.3.2
+BUGFIX
+* fix: remove sharedPool
+
+IMPROVEMENT
+* [\#2007](https://github.com/bnb-chain/bsc/pull/2007) consensus/parlia: increase size of snapshot cache in parlia
+* [\#2008](https://github.com/bnb-chain/bsc/pull/2008) consensus/parlia: recover faster when snapshot of parlia is gone in disk
+
+## v1.3.1
+FEATURE
+* [\#1881](https://github.com/bnb-chain/bsc/pull/1881) feat: active pbss
+* [\#1882](https://github.com/bnb-chain/bsc/pull/1882) cmd/geth: add hbss to pbss convert tool
+* [\#1916](https://github.com/bnb-chain/bsc/pull/1916) feat: cherry-pick pbss patch commits from eth repo in v1.13.2
+* [\#1939](https://github.com/bnb-chain/bsc/pull/1939) dependency: go version to 1.20 and some dependencies in go.mod
+* [\#1955](https://github.com/bnb-chain/bsc/pull/1955) eth, trie/triedb/pathdb: pbss patches
+* [\#1962](https://github.com/bnb-chain/bsc/pull/1962) cherry pick pbss patches from go-ethereum
+
+BUGFIX
+* [\#1923](https://github.com/bnb-chain/bsc/pull/1923) consensus/parlia: fix nextForkHash in Extra filed of block header
+* [\#1950](https://github.com/bnb-chain/bsc/pull/1950) fix: 2 APIs of get receipt related
+* [\#1951](https://github.com/bnb-chain/bsc/pull/1951) txpool: fix a potential crash issue in shutdown;
+* [\#1963](https://github.com/bnb-chain/bsc/pull/1963) fix: revert trie commited flag after delete statedb mpt cache
+
+IMPROVEMENT
+* [\#1948](https://github.com/bnb-chain/bsc/pull/1948) performance: commitTire concurrently
+* [\#1949](https://github.com/bnb-chain/bsc/pull/1949) code: remove accountTrieCache and storageTrieCache
+* [\#1954](https://github.com/bnb-chain/bsc/pull/1954) trie: keep trie prefetch during validation phase
+
 ## v1.3.0
 #### RPC
 * [internal/ethapi: add debug_getRawReceipts RPC method (#24773)](https://github.com/bnb-chain/bsc/pull/1840/commits/ae7d834bc752a2d94fef9d354ee78fcb9425f3d1)

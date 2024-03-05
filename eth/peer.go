@@ -17,8 +17,10 @@
 package eth
 
 import (
+	"errors"
 	"net"
 
+	"github.com/ethereum/go-ethereum/core/txpool"
 	"github.com/ethereum/go-ethereum/eth/protocols/bsc"
 	"github.com/ethereum/go-ethereum/eth/protocols/trust"
 
@@ -52,6 +54,19 @@ func (p *ethPeer) remoteAddr() net.Addr {
 		return p.Peer.Peer.RemoteAddr()
 	}
 	return nil
+}
+
+func (p *ethPeer) ScoreTxErr(err error) bool {
+	isOk := err == nil || errors.Is(err, txpool.ErrReplaceUnderpriced) || errors.Is(err, txpool.ErrAlreadyKnown)
+	if !isOk {
+		p.Score++
+		if p.Score >= 100 {
+			return false
+		}
+	} else if p.Score > 0 {
+		p.Score--
+	}
+	return true
 }
 
 // snapPeerInfo represents a short summary of the `snap` sub-protocol metadata known

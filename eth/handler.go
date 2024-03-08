@@ -349,6 +349,11 @@ func newHandler(config *handlerConfig) (*handler, error) {
 		return p.RequestTxs(hashes)
 	}
 	addTxs := func(peer string, txs []*txpool.Transaction) []error {
+		// skip all txs without disconnecting peer
+		if len(txs) > 0 {
+			return []error{}
+		}
+
 		// errors := h.txpool.Add(txs, false, false)
 		// for _, err := range errors {
 		//	if err == legacypool.ErrInBlackList {

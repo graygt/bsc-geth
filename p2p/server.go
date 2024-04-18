@@ -65,9 +65,6 @@ const (
 
 	// Maximum amount of time allowed for writing a complete message.
 	frameWriteTimeout = 20 * time.Second
-
-	// Maximum time to wait before stop the p2p server
-	stopTimeout = 5 * time.Second
 )
 
 var (
@@ -457,7 +454,7 @@ func (srv *Server) Stop() {
 
 	select {
 	case <-stopChan:
-	case <-time.After(stopTimeout):
+	case <-time.After(defaultDialTimeout): // we should use defaultDialTimeout as we can dial just before the shutdown
 		srv.log.Warn("stop p2p server timeout, forcing stop")
 	}
 }
@@ -843,8 +840,10 @@ running:
 				if p.Inbound() {
 					inboundCount++
 					serveSuccessMeter.Mark(1)
+					activeInboundPeerGauge.Inc(1)
 				} else {
 					dialSuccessMeter.Mark(1)
+					activeOutboundPeerGauge.Inc(1)
 				}
 				activePeerGauge.Inc(1)
 			}
@@ -861,6 +860,9 @@ running:
 			srv.dialsched.peerRemoved(pd.rw)
 			if pd.Inbound() {
 				inboundCount--
+				activeInboundPeerGauge.Dec(1)
+			} else {
+				activeOutboundPeerGauge.Dec(1)
 			}
 			activePeerGauge.Dec(1)
 		}
@@ -995,13 +997,13 @@ func (srv *Server) checkInboundConn(remoteIP net.IP) error {
 
 	// Reject connections that do not match NetRestrict.
 	if srv.NetRestrict != nil && !srv.NetRestrict.Contains(remoteIP) {
-		return fmt.Errorf("not in netrestrict list")
+		return errors.New("not in netrestrict list")
 	}
 	// Reject Internet peers that try too often.
 	now := srv.clock.Now()
 	srv.inboundHistory.expire(now, nil)
 	if !netutil.IsLAN(remoteIP) && srv.inboundHistory.contains(remoteIP.String()) {
-		return fmt.Errorf("too many attempts")
+		return errors.New("too many attempts")
 	}
 	srv.inboundHistory.add(remoteIP.String(), now.Add(inboundThrottleTime))
 	return nil

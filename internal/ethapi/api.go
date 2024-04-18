@@ -2933,7 +2933,6 @@ func (s *BundleAPI) EstimateGasBundle(ctx context.Context, args EstimateGasBundl
 				json.Unmarshal(data, &result)
 				return result
 			}*/
-
 		} else {
 			// alternate implementation, works same
 			/*dst := make([]byte, hex.EncodedLen(len(result.Return())))

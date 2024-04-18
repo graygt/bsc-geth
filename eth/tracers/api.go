@@ -372,8 +372,8 @@ func (api *API) traceChain(start, end *types.Block, config *TraceConfig, closed 
 			// if the relevant state is available in disk.
 			var preferDisk bool
 			if statedb != nil {
-				s1, s2 := statedb.Database().TrieDB().Size()
-				preferDisk = s1+s2 > defaultTracechainMemLimit
+				s1, s2, s3, s4 := statedb.Database().TrieDB().Size()
+				preferDisk = s1+s2+s3+s4 > defaultTracechainMemLimit
 			}
 			statedb, release, err = api.backend.StateAtBlock(ctx, block, reexec, statedb, false, preferDisk)
 			if err != nil {
@@ -955,6 +955,42 @@ func (api *API) TraceCall(ctx context.Context, args ethapi.TransactionArgs, bloc
 	return api.traceTx(ctx, msg, new(Context), vmctx, statedb, traceConfig)
 }
 
+func customGetHashFn(ref *types.Header, chain core.ChainContext) func(n uint64) common.Hash {
+	// Cache will initially contain [refHash.parent],
+	// Then fill up with [refHash.p, refHash.pp, refHash.ppp, ...]
+	var cache []common.Hash
+
+	return func(n uint64) common.Hash {
+		// If there's no hash cache yet, make one
+		if len(cache) == 0 {
+			cache = append(cache, ref.ParentHash)
+		}
+		if n == ref.Number.Uint64() {
+			return ref.Hash()
+		}
+		if idx := ref.Number.Uint64() - n - 1; idx < uint64(len(cache)) {
+			return cache[idx]
+		}
+		// No luck in the cache, but we can start iterating from the last element we already know
+		lastKnownHash := cache[len(cache)-1]
+		lastKnownNumber := ref.Number.Uint64() - uint64(len(cache))
+
+		for {
+			header := chain.GetHeader(lastKnownHash, lastKnownNumber)
+			if header == nil {
+				break
+			}
+			cache = append(cache, header.ParentHash)
+			lastKnownHash = header.ParentHash
+			lastKnownNumber = header.Number.Uint64() - 1
+			if n == lastKnownNumber {
+				return lastKnownHash
+			}
+		}
+		return common.Hash{}
+	}
+}
+
 func (api *API) TraceCallMany(ctx context.Context, txs []ethapi.TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, config *TraceCallConfig) (interface{}, error) {
 	// Try to retrieve the specified block
 	var (
@@ -991,6 +1027,10 @@ func (api *API) TraceCallMany(ctx context.Context, txs []ethapi.TransactionArgs,
 	defer release()
 
 	vmctx := core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
+	vmctx.BlockNumber.Add(vmctx.BlockNumber, big.NewInt(1))
+	vmctx.Time += 3
+	vmctx.GetHash = customGetHashFn(block.Header(), api.chainContext(ctx))
+
 	// Apply the customization rules if required.
 	if config != nil {
 		if err := config.StateOverrides.Apply(statedb); err != nil {
@@ -1013,7 +1053,7 @@ func (api *API) TraceCallMany(ctx context.Context, txs []ethapi.TransactionArgs,
 			continue
 		}
 
-		// Trace the transaction and return
+		// Trace the transaction
 		res, err := api.traceTx(ctx, msg, new(Context), vmctx, statedb, traceConfig)
 		if err != nil {
 			results[idx] = &txTraceResult{Error: err.Error()}

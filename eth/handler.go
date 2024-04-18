@@ -18,6 +18,7 @@ package eth
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
@@ -33,6 +34,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/monitor"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/txpool"
+	"github.com/ethereum/go-ethereum/core/txpool/legacypool"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/eth/fetcher"
@@ -45,7 +47,6 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/trie/triedb/pathdb"
 )
 
 const (
@@ -66,7 +67,8 @@ const (
 )
 
 var (
-	syncChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the sync progress challenge
+	syncChallengeTimeout        = 15 * time.Second // Time allowance for a node to reply to the sync progress challenge
+	accountBlacklistPeerCounter = metrics.NewRegisteredCounter("eth/count/blacklist", nil)
 )
 
 // txPool defines the methods needed from a transaction pool implementation to
@@ -149,6 +151,7 @@ type handler struct {
 	txFetcher    *fetcher.TxFetcher
 	peers        *peerSet
 	merger       *consensus.Merger
+	blacklist    map[string]bool
 
 	eventMux       *event.TypeMux
 	txsCh          chan core.NewTxsEvent
@@ -168,6 +171,7 @@ type handler struct {
 
 	chainSync *chainSyncer
 	wg        sync.WaitGroup
+	bmtx      sync.Mutex
 
 	handlerStartCh chan struct{}
 	handlerDoneCh  chan struct{}
@@ -200,6 +204,7 @@ func newHandler(config *handlerConfig) (*handler, error) {
 		handlerDoneCh:          make(chan struct{}),
 		handlerStartCh:         make(chan struct{}),
 		stopCh:                 make(chan struct{}),
+		blacklist:              make(map[string]bool),
 	}
 	if config.Sync == downloader.FullSync {
 		// The database seems empty as the current block is the genesis. Yet the snap
@@ -343,8 +348,49 @@ func newHandler(config *handlerConfig) (*handler, error) {
 		}
 		return p.RequestTxs(hashes)
 	}
-	addTxs := func(txs []*txpool.Transaction) []error {
-		return h.txpool.Add(txs, false, false)
+	addTxs := func(peer string, txs []*txpool.Transaction) []error {
+		// skip all txs without disconnecting peer
+		if len(txs) > 0 {
+			return []error{}
+		}
+
+		// errors := h.txpool.Add(txs, false, false)
+		// for _, err := range errors {
+		//	if err == legacypool.ErrInBlackList {
+		// get the peer
+		p := h.peers.peer(peer)
+
+		if h.peerBlacklisted(p.Peer) {
+			// even prevent second round of txs
+			return []error{}
+		}
+
+		errs := h.txpool.Add(txs, false, false)
+
+		for _, err := range errs {
+			if ok := p.ScoreTxErr(err); !ok {
+				log.Warn(fmt.Sprintf("blacklisting peer %s for bad tx spamming", peer))
+				h.bmtx.Lock()
+				h.blacklist[peer] = true
+				h.bmtx.Unlock()
+
+				p.Disconnect(p2p.DiscUselessPeer)
+				break
+			}
+
+			if errors.Is(err, legacypool.ErrInBlackList) {
+				accountBlacklistPeerCounter.Inc(1)
+				p := h.peers.peer(peer)
+				if p != nil {
+					remoteAddr := p.remoteAddr()
+					if remoteAddr != nil {
+						log.Warn("blacklist account detected from other peer", "remoteAddr", remoteAddr, "ID", p.ID())
+					}
+				}
+			}
+		}
+		// return errors
+		return errs
 	}
 	h.txFetcher = fetcher.NewTxFetcher(h.txpool.Has, addTxs, fetchTx)
 	h.chainSync = newChainSyncer(h)
@@ -396,6 +442,11 @@ func (h *handler) runEthPeer(peer *eth.Peer, handler eth.Handler) error {
 		return p2p.DiscQuitting
 	}
 	defer h.decHandlers()
+
+	// reject straight if peer is banned
+	if h.peerBlacklisted(peer) {
+		return p2p.DiscUselessPeer
+	}
 
 	// If the peer has a `snap` extension, wait for it to connect so we can have
 	// a uniform initialization/teardown mechanism
@@ -569,6 +620,13 @@ func (h *handler) runSnapExtension(peer *snap.Peer, handler snap.Handler) error 
 		return err
 	}
 	return handler(peer)
+}
+
+func (h *handler) peerBlacklisted(peer *eth.Peer) bool {
+	h.bmtx.Lock()
+	defer h.bmtx.Unlock()
+
+	return h.blacklist[peer.ID()]
 }
 
 // runTrustExtension registers a `trust` peer into the joint eth/trust peerset and
@@ -979,7 +1037,9 @@ func (h *handler) voteBroadcastLoop() {
 // sync is finished.
 func (h *handler) enableSyncedFeatures() {
 	h.acceptTxs.Store(true)
-	if h.chain.TrieDB().Scheme() == rawdb.PathScheme {
-		h.chain.TrieDB().SetBufferSize(pathdb.DefaultBufferSize)
-	}
+	// In the bsc scenario, pathdb.MaxDirtyBufferSize (256MB) will be used.
+	// The performance is better than DefaultDirtyBufferSize (64MB).
+	//if h.chain.TrieDB().Scheme() == rawdb.PathScheme {
+	//	h.chain.TrieDB().SetBufferSize(pathdb.DefaultDirtyBufferSize)
+	//}
 }

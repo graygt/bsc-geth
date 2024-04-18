@@ -148,8 +148,8 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Namespace: "personal",
 			Service:   NewPersonalAccountAPI(apiBackend, nonceLock),
 		}, {
-			Namespace: "mev",
-			Service:   NewMevAPI(apiBackend),
-		}
+			Namespace: "eth",
+			Service:   NewBundleAPI(apiBackend, apiBackend.Chain()), // this is different from "go-ethereum" implementation, see also "go-ethereum implementation
+		},
 	}
 }

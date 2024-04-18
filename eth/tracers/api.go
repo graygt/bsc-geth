@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"runtime"
 	"sync"
@@ -1179,7 +1180,7 @@ func (api *API) TraceCallMany(ctx context.Context, txs []ethapi.TransactionArgs,
 		}
 
 		// Trace the transaction
-		res, err := api.traceTx(ctx, msg, new(Context), vmctx, statedb, traceConfig)
+		res, err := api.traceTx(ctx, msg, new(Context), vmctx, statedb, traceConfig, false)
 		if err != nil {
 			results[idx] = &txTraceResult{Error: err.Error()}
 			continue

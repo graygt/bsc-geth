@@ -2809,7 +2809,7 @@ type EstimateGasBundleArgs struct {
 	Timeout                *int64                `json:"timeout"`
 }
 
-func (s *BundleAPI) EstimateGasBundle(ctx context.Context, args EstimateGasBundleArgs) (map[string]interface{}, error) {
+func (s *BundleAPI) EstimateGasBundle(ctx context.Context, args EstimateGasBundleArgs) ([]interface{}, error) {
 	if len(args.Txs) == 0 {
 		return nil, errors.New("bundle missing txs")
 	}
@@ -2865,7 +2865,7 @@ func (s *BundleAPI) EstimateGasBundle(ctx context.Context, args EstimateGasBundl
 	globalGasCap := s.b.RPCGasCap()
 
 	// Results
-	results := []map[string]interface{}{}
+	results := []interface{}{}
 
 	// Copy the original db so we don't modify it
 	statedb := state.Copy()
@@ -2922,7 +2922,7 @@ func (s *BundleAPI) EstimateGasBundle(ctx context.Context, args EstimateGasBundl
 			jsonResult["error"] = result.Err.Error()
 			revert := result.Revert()
 			if len(revert) > 0 {
-				jsonResult["revert"] = string(revert)
+				jsonResult["revertReason"] = string(revert)
 			}
 
 			// alternate more readable revert
@@ -2944,9 +2944,5 @@ func (s *BundleAPI) EstimateGasBundle(ctx context.Context, args EstimateGasBundl
 		results = append(results, jsonResult)
 	}
 
-	// Return results
-	ret := map[string]interface{}{}
-	ret["results"] = results
-
-	return ret, nil
+	return results, nil
 }

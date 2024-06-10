@@ -117,8 +117,9 @@ type Config struct {
 	// State scheme represents the scheme used to store ethereum states and trie
 	// nodes on top. It can be 'hash', 'path', or none which means use the scheme
 	// consistent with persistent state.
-	StateScheme   string `toml:",omitempty"` // State scheme used to store ethereum state and merkle trie nodes on top
-	PathSyncFlush bool   `toml:",omitempty"` // State scheme used to store ethereum state and merkle trie nodes on top
+	StateScheme        string `toml:",omitempty"` // State scheme used to store ethereum state and merkle trie nodes on top
+	PathSyncFlush      bool   `toml:",omitempty"` // State scheme used to store ethereum state and merkle trie nodes on top
+	JournalFileEnabled bool   // Whether the TrieJournal is stored using journal file
 
 	// RequiredBlocks is a set of block number -> hash mappings which must be in the
 	// canonical chain of all remote peers. Setting the option makes geth verify the
@@ -190,14 +191,11 @@ type Config struct {
 	// OverrideCancun (TODO: remove after the fork)
 	OverrideCancun *uint64 `toml:",omitempty"`
 
+	// OverrideHaber (TODO: remove after the fork)
+	OverrideHaber *uint64 `toml:",omitempty"`
+
 	// OverrideVerkle (TODO: remove after the fork)
 	OverrideVerkle *uint64 `toml:",omitempty"`
-
-	// OverrideFeynman (TODO: remove after the fork)
-	OverrideFeynman *uint64 `toml:",omitempty"`
-
-	// OverrideFeynmanFix (TODO: remove after the fork)
-	OverrideFeynmanFix *uint64 `toml:",omitempty"`
 
 	// blob setting
 	BlobExtraReserve uint64

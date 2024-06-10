@@ -1,4 +1,59 @@
 # Changelog
+## v1.4.8
+### FEATURE
+* [\#2483](https://github.com/bnb-chain/bsc/pull/2483) core/vm: add secp256r1 into PrecompiledContractsHaber
+* [\#2400](https://github.com/bnb-chain/bsc/pull/2400) RIP-7212: Precompile for secp256r1 Curve Support
+
+### IMPROVEMENT
+NA
+
+### BUGFIX
+NA
+
+## v1.4.7
+### FEATURE
+* [\#2439](https://github.com/bnb-chain/bsc/pull/2439) config: setup Mainnet Tycho(Cancun) hardfork date
+
+### IMPROVEMENT
+* [\#2396](https://github.com/bnb-chain/bsc/pull/2396) metrics: add blockInsertMgaspsGauge to trace mgasps
+* [\#2411](https://github.com/bnb-chain/bsc/pull/2411) build(deps): bump golang.org/x/net from 0.19.0 to 0.23.0
+* [\#2435](https://github.com/bnb-chain/bsc/pull/2435) txpool: limit max gas when mining is enabled
+* [\#2438](https://github.com/bnb-chain/bsc/pull/2438) fix: performance issue when load journal
+* [\#2440](https://github.com/bnb-chain/bsc/pull/2440) nancy: add files .nancy-ignore
+
+### BUGFIX
+NA
+
+## v1.4.6
+### FEATURE
+* [\#2227](https://github.com/bnb-chain/bsc/pull/2227) core: separated databases for block data
+* [\#2404](https://github.com/bnb-chain/bsc/pull/2404) cmd, p2p: filter peers by regex on name
+
+### IMPROVEMENT
+* [\#2201](https://github.com/bnb-chain/bsc/pull/2201) chore: render system bytecode by go:embed
+* [\#2363](https://github.com/bnb-chain/bsc/pull/2363) feat: greedy merge tx in bid
+* [\#2389](https://github.com/bnb-chain/bsc/pull/2389) deps: update prsym to solve warning about quic-go version
+* [\#2341](https://github.com/bnb-chain/bsc/pull/2341) core/trie: persist TrieJournal to journal file instead of kv database
+* [\#2395](https://github.com/bnb-chain/bsc/pull/2395) fix: trieJournal format compatible old db format
+* [\#2406](https://github.com/bnb-chain/bsc/pull/2406) feat: adaptive for loading journal file or journal kv during loadJournal
+* [\#2390](https://github.com/bnb-chain/bsc/pull/2390) chore: fix function names in comment
+* [\#2399](https://github.com/bnb-chain/bsc/pull/2399) chore: fix some typos in comments
+* [\#2408](https://github.com/bnb-chain/bsc/pull/2408) chore: fix some typos in comments
+* [\#2416](https://github.com/bnb-chain/bsc/pull/2416) fix: fix function names
+* [\#2424](https://github.com/bnb-chain/bsc/pull/2424) feat: recommit bid when newBidCh is empty to maximize mev reward
+* [\#2430](https://github.com/bnb-chain/bsc/pull/2430) fix: oom caused by non-discarded mev simulation env
+* [\#2428](https://github.com/bnb-chain/bsc/pull/2428) chore: add metric & log for blobTx
+* [\#2419](https://github.com/bnb-chain/bsc/pull/2419) metrics: add doublesign counter
+
+### BUGFIX
+* [\#2244](https://github.com/bnb-chain/bsc/pull/2244) cmd/geth: fix importBlock
+* [\#2391](https://github.com/bnb-chain/bsc/pull/2391) fix: print value instead of pointer in ConfigCompatError
+* [\#2398](https://github.com/bnb-chain/bsc/pull/2398) fix: no import blocks before or equal to the finalized height
+* [\#2401](https://github.com/bnb-chain/bsc/pull/2401) fix: allow fast node to rewind after abnormal shutdown
+* [\#2403](https://github.com/bnb-chain/bsc/pull/2403) fix: NPE
+* [\#2423](https://github.com/bnb-chain/bsc/pull/2423) eth/gasprice: add query limit to defend DDOS attack
+* [\#2425](https://github.com/bnb-chain/bsc/pull/2425) fix: adapt journal for cmd
+
 ## v1.4.5
 ### FEATURE
 * [\#2378](https://github.com/bnb-chain/bsc/pull/2378) config: setup Testnet Tycho(Cancun) hardfork date

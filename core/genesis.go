@@ -216,10 +216,9 @@ func (e *GenesisMismatchError) Error() string {
 // ChainOverrides contains the changes to chain config
 // Typically, these modifications involve hardforks that are not enabled on the BSC mainnet, intended for testing purposes.
 type ChainOverrides struct {
-	OverrideCancun     *uint64
-	OverrideVerkle     *uint64
-	OverrideFeynman    *uint64
-	OverrideFeynmanFix *uint64
+	OverrideCancun *uint64
+	OverrideHaber  *uint64
+	OverrideVerkle *uint64
 }
 
 // SetupGenesisBlock writes or updates the genesis block in db.
@@ -248,14 +247,11 @@ func SetupGenesisBlockWithOverride(db ethdb.Database, triedb *triedb.Database, g
 			if overrides != nil && overrides.OverrideCancun != nil {
 				config.CancunTime = overrides.OverrideCancun
 			}
+			if overrides != nil && overrides.OverrideHaber != nil {
+				config.HaberTime = overrides.OverrideHaber
+			}
 			if overrides != nil && overrides.OverrideVerkle != nil {
 				config.VerkleTime = overrides.OverrideVerkle
-			}
-			if overrides != nil && overrides.OverrideFeynman != nil {
-				config.FeynmanTime = overrides.OverrideFeynman
-			}
-			if overrides != nil && overrides.OverrideFeynmanFix != nil {
-				config.FeynmanFixTime = overrides.OverrideFeynmanFix
 			}
 		}
 	}
@@ -493,13 +489,13 @@ func (g *Genesis) Commit(db ethdb.Database, triedb *triedb.Database) (*types.Blo
 	if err := flushAlloc(&g.Alloc, db, triedb, block.Hash()); err != nil {
 		return nil, err
 	}
-	rawdb.WriteTd(db, block.Hash(), block.NumberU64(), block.Difficulty())
-	rawdb.WriteBlock(db, block)
-	rawdb.WriteReceipts(db, block.Hash(), block.NumberU64(), nil)
-	rawdb.WriteCanonicalHash(db, block.Hash(), block.NumberU64())
-	rawdb.WriteHeadBlockHash(db, block.Hash())
+	rawdb.WriteTd(db.BlockStore(), block.Hash(), block.NumberU64(), block.Difficulty())
+	rawdb.WriteBlock(db.BlockStore(), block)
+	rawdb.WriteReceipts(db.BlockStore(), block.Hash(), block.NumberU64(), nil)
+	rawdb.WriteCanonicalHash(db.BlockStore(), block.Hash(), block.NumberU64())
+	rawdb.WriteHeadBlockHash(db.BlockStore(), block.Hash())
 	rawdb.WriteHeadFastBlockHash(db, block.Hash())
-	rawdb.WriteHeadHeaderHash(db, block.Hash())
+	rawdb.WriteHeadHeaderHash(db.BlockStore(), block.Hash())
 	rawdb.WriteChainConfig(db, block.Hash(), config)
 	return block, nil
 }

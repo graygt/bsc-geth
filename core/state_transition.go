@@ -466,7 +466,7 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 	if st.evm.ChainConfig().Parlia != nil {
 		st.state.AddBalance(consensus.SystemAddress, fee)
 		// add extra blob fee reward
-		if rules.IsCancun {
+		if rules.IsCancun && st.evm.Context.BlobBaseFee != nil {
 			blobFee := new(big.Int).SetUint64(st.blobGasUsed())
 			blobFee.Mul(blobFee, st.evm.Context.BlobBaseFee)
 			blobFeeU256, _ := uint256.FromBig(blobFee)

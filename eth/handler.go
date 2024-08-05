@@ -18,6 +18,7 @@ package eth
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
@@ -150,6 +151,7 @@ type handler struct {
 	txFetcher    *fetcher.TxFetcher
 	peers        *peerSet
 	merger       *consensus.Merger
+	blacklist    map[string]bool
 
 	eventMux       *event.TypeMux
 	txsCh          chan core.NewTxsEvent
@@ -169,6 +171,7 @@ type handler struct {
 
 	chainSync *chainSyncer
 	wg        sync.WaitGroup
+	bmtx      sync.Mutex // blacklist mutex?
 
 	handlerStartCh chan struct{}
 	handlerDoneCh  chan struct{}
@@ -201,6 +204,7 @@ func newHandler(config *handlerConfig) (*handler, error) {
 		handlerDoneCh:          make(chan struct{}),
 		handlerStartCh:         make(chan struct{}),
 		stopCh:                 make(chan struct{}),
+		blacklist:              make(map[string]bool),
 	}
 	if config.Sync == downloader.FullSync {
 		// The database seems empty as the current block is the genesis. Yet the snap
@@ -352,8 +356,31 @@ func newHandler(config *handlerConfig) (*handler, error) {
 		return p.RequestTxs(hashes)
 	}
 	addTxs := func(peer string, txs []*types.Transaction) []error {
+		//errors := h.txpool.Add(txs, false, false)
+		//for _, err := range errors {
+		//	if err == txpool.ErrInBlackList {
+
+		// get the peer
+		p := h.peers.peer(peer)
+
+		if h.peerBlacklisted(p.Peer) {
+			// even prevent second round of txs
+			return []error{}
+		}
+
 		errors := h.txpool.Add(txs, false, false)
+
 		for _, err := range errors {
+			if ok := p.ScoreTxErr(err); !ok {
+				log.Warn(fmt.Sprintf("blacklisting peer %s for bad tx spamming", peer))
+				h.bmtx.Lock()
+				h.blacklist[peer] = true
+				h.bmtx.Unlock()
+
+				p.Disconnect(p2p.DiscUselessPeer)
+				break
+			}
+
 			if err == txpool.ErrInBlackList {
 				accountBlacklistPeerCounter.Inc(1)
 				p := h.peers.peer(peer)
@@ -415,6 +442,11 @@ func (h *handler) runEthPeer(peer *eth.Peer, handler eth.Handler) error {
 		return p2p.DiscQuitting
 	}
 	defer h.decHandlers()
+
+	// reject straight if peer is banned
+	if h.peerBlacklisted(peer) {
+		return p2p.DiscUselessPeer
+	}
 
 	// If the peer has a `snap` extension, wait for it to connect so we can have
 	// a uniform initialization/teardown mechanism
@@ -588,6 +620,13 @@ func (h *handler) runSnapExtension(peer *snap.Peer, handler snap.Handler) error 
 		return err
 	}
 	return handler(peer)
+}
+
+func (h *handler) peerBlacklisted(peer *eth.Peer) bool {
+	h.bmtx.Lock()
+	defer h.bmtx.Unlock()
+
+	return h.blacklist[peer.ID()]
 }
 
 // runTrustExtension registers a `trust` peer into the joint eth/trust peerset and

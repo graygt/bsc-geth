@@ -355,13 +355,13 @@ func newHandler(config *handlerConfig) (*handler, error) {
 		}
 		return p.RequestTxs(hashes)
 	}
-	addTxs := func(peer string, txs []*types.Transaction) []error {
+	addTxs := func(peerId string, txs []*types.Transaction) []error {
 		//errors := h.txpool.Add(txs, false, false)
 		//for _, err := range errors {
 		//	if err == txpool.ErrInBlackList {
 
 		// get the peer
-		p := h.peers.peer(peer)
+		p := h.peers.peer(peerId)
 
 		if h.peerBlacklisted(p.Peer) {
 			// even prevent second round of txs
@@ -372,9 +372,9 @@ func newHandler(config *handlerConfig) (*handler, error) {
 
 		for _, err := range errors {
 			if ok := p.ScoreTxErr(err); !ok {
-				log.Warn(fmt.Sprintf("blacklisting peer %s for bad tx spamming", peer))
+				log.Warn(fmt.Sprintf("blacklisting peer %s for bad tx spamming", p.Info().Enode))
 				h.bmtx.Lock()
-				h.blacklist[peer] = true
+				h.blacklist[peerId] = true
 				h.bmtx.Unlock()
 
 				p.Disconnect(p2p.DiscUselessPeer)
@@ -383,7 +383,7 @@ func newHandler(config *handlerConfig) (*handler, error) {
 
 			if err == txpool.ErrInBlackList {
 				accountBlacklistPeerCounter.Inc(1)
-				p := h.peers.peer(peer)
+				p := h.peers.peer(peerId)
 				if p != nil {
 					remoteAddr := p.remoteAddr()
 					if remoteAddr != nil {

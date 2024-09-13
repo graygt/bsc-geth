@@ -56,6 +56,7 @@ func (p *ethPeer) remoteAddr() net.Addr {
 	return nil
 }
 
+// returns true if score is ok, false if peer should be banned
 func (p *ethPeer) ScoreTxErr(err error) bool {
 	isOk := err == nil || errors.Is(err, txpool.ErrReplaceUnderpriced) || errors.Is(err, txpool.ErrAlreadyKnown)
 	if !isOk {

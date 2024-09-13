@@ -371,7 +371,7 @@ func newHandler(config *handlerConfig) (*handler, error) {
 		errors := h.txpool.Add(txs, false, false)
 
 		for _, err := range errors {
-			if ok := p.ScoreTxErr(err) && !p.Info().Network.Trusted; !ok {
+			if !p.ScoreTxErr(err) && !p.Info().Network.Trusted {
 				log.Warn(fmt.Sprintf("blacklisting peer %s for bad tx spamming", p.Info().Enode))
 				h.bmtx.Lock()
 				h.blacklist[peerId] = true
